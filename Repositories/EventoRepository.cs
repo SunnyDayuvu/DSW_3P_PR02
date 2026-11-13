@@ -1,60 +1,65 @@
-using System.Collections.Concurrent;
+using DSW_3P_PR02.Data;
 using DSW_3P_PR02.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DSW_3P_PR02.Repositories;
 
 public sealed class EventoRepository : IEventoRepository
 {
-    private readonly ConcurrentDictionary<int, Evento> _eventos = new();
-    private int _siguienteId;
+    private readonly AppDbContext _context;
+
+    public EventoRepository(AppDbContext context)
+    {
+        _context = context;
+    }
 
     public List<Evento> ObtenerTodos()
     {
-        return _eventos.Values
+        return _context.Eventos
+            .AsNoTracking()
             .OrderBy(evento => evento.Id)
-            .Select(Copiar)
             .ToList();
     }
 
     public Evento? ObtenerPorId(int id)
     {
-        return _eventos.TryGetValue(id, out var evento) ? Copiar(evento) : null;
+        return _context.Eventos
+            .AsNoTracking()
+            .FirstOrDefault(evento => evento.Id == id);
     }
 
     public Evento Agregar(Evento evento)
     {
-        var creado = Copiar(evento);
-        creado.Id = Interlocked.Increment(ref _siguienteId);
-        _eventos[creado.Id] = creado;
-        return Copiar(creado);
+        _context.Eventos.Add(evento);
+        _context.SaveChanges();
+        return evento;
     }
 
     public Evento? Actualizar(int id, Evento evento)
     {
-        if (!_eventos.TryGetValue(id, out var existente))
+        var existente = _context.Eventos.FirstOrDefault(actual => actual.Id == id);
+        if (existente is null)
             return null;
 
-        var actualizado = Copiar(evento);
-        actualizado.Id = id;
-        return _eventos.TryUpdate(id, actualizado, existente) ? Copiar(actualizado) : null;
+        existente.Nombre = evento.Nombre;
+        existente.Categoria = evento.Categoria;
+        existente.Fecha = evento.Fecha;
+        existente.Lugar = evento.Lugar;
+        existente.CupoMaximo = evento.CupoMaximo;
+        existente.Activo = evento.Activo;
+
+        _context.SaveChanges();
+        return existente;
     }
 
     public bool Eliminar(int id)
     {
-        return _eventos.TryRemove(id, out _);
-    }
+        var evento = _context.Eventos.FirstOrDefault(actual => actual.Id == id);
+        if (evento is null)
+            return false;
 
-    private static Evento Copiar(Evento evento)
-    {
-        return new Evento
-        {
-            Id = evento.Id,
-            Nombre = evento.Nombre,
-            Categoria = evento.Categoria,
-            Fecha = evento.Fecha,
-            Lugar = evento.Lugar,
-            CupoMaximo = evento.CupoMaximo,
-            Activo = evento.Activo
-        };
+        _context.Eventos.Remove(evento);
+        _context.SaveChanges();
+        return true;
     }
 }
