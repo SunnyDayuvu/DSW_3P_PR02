@@ -1,6 +1,61 @@
 @DSW_3P_PR02_HostAddress = http://localhost:5088
 
-GET {{DSW_3P_PR02_HostAddress}}/weatherforecast/
+### Obtener todos los eventos
+GET {{DSW_3P_PR02_HostAddress}}/api/eventos
 Accept: application/json
 
 ###
+
+### Obtener un evento
+GET {{DSW_3P_PR02_HostAddress}}/api/eventos/1
+Accept: application/json
+
+###
+
+### Crear un evento
+POST {{DSW_3P_PR02_HostAddress}}/api/eventos
+Content-Type: application/json
+
+{
+  "nombre": "Conferencia de tecnología",
+  "categoria": "Educación",
+  "fecha": "2026-12-01T10:00:00",
+  "lugar": "Auditorio",
+  "cupoMaximo": 100,
+  "activo": true
+}
+
+###
+
+### Validación: nombre obligatorio, cupo mayor que cero y fecha válida
+POST {{DSW_3P_PR02_HostAddress}}/api/eventos
+Content-Type: application/json
+
+{
+  "nombre": " ",
+  "categoria": "Educación",
+  "fecha": "0001-01-01T00:00:00",
+  "lugar": "Auditorio",
+  "cupoMaximo": 0,
+  "activo": true
+}
+
+###
+
+### Actualizar un evento
+PUT {{DSW_3P_PR02_HostAddress}}/api/eventos/1
+Content-Type: application/json
+
+{
+  "nombre": "Conferencia actualizada",
+  "categoria": "Educación",
+  "fecha": "2026-12-01T11:00:00",
+  "lugar": "Auditorio",
+  "cupoMaximo": 120,
+  "activo": true
+}
+
+###
+
+### Eliminar un evento
+DELETE {{DSW_3P_PR02_HostAddress}}/api/eventos/1
